@@ -5,25 +5,6 @@ import subprocess
 import threading
 import urllib.request
 
-#avoid trying installing same packages over and over again (not)
-# def check_installation(package_name):
-#     try:
-#         subprocess.check_output(["pip", "show", package_name])
-#         return True
-#     except subprocess.CalledProcessError:
-#         return False
-# def install_requirements(requirements_url, button):
-#     def install():
-#         button.configure(state=ctk.DISABLED, text="Instalowanie...")
-#         if not check_installation("required_package"):
-#             subprocess.run(["pip", "install", "-r", requirements_url])
-#         button.configure(text="Uruchom skrypt", state=ctk.NORMAL)
-
-#     # Uruchomienie funkcji w oddzielnym wątku
-#     install_thread = threading.Thread(target=install)
-#     install_thread.start()
-
-
 def install_and_run(requirements_url, script_url, button):
     def install():
         button.configure(state=ctk.DISABLED, text="Instalowanie...")
@@ -48,9 +29,9 @@ def install_and_run(requirements_url, script_url, button):
     install_thread.start()
 
     urllib.request.urlretrieve(script_url, "script.py")
-    process = subprocess.Popen(["python", "script.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
+    process = subprocess.Popen(["pythonw", "script.py"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True)
     log_text.configure(state=ctk.DISABLED)
-    log_text.delete("1.0", ctk.END)  # Wyczyszczenie log_text
+    log_text.delete("1.0", ctk.END) 
 
     threading.Thread(target=clear_log).start()
     threading.Thread(target=update_log).start()
