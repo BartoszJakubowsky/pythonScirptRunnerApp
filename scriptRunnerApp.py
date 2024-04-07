@@ -5,6 +5,9 @@ import subprocess
 import threading
 import urllib.request
 
+current_directory = os.path.dirname(os.path.abspath(__file__))
+# file_path = os.path.join(current_directory, "scripts_config.json")
+
 def install_and_run(requirements_url, script_url, button):
     def install():
         button.configure(state=ctk.DISABLED, text="Instalowanie...")
@@ -36,37 +39,57 @@ def install_and_run(requirements_url, script_url, button):
     threading.Thread(target=clear_log).start()
     threading.Thread(target=update_log).start()
 
+def load_config_from_github():
+    github_raw_url = 'https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/scripts_config.json'
+    config_data = {}
 
-current_directory = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(current_directory, "scripts_config.json")
+    try:
+        with urllib.request.urlopen(github_raw_url) as response:
+            config_data = json.loads(response.read().decode())
+    except Exception as e:
+        print(f"Error loading config from GitHub: {e}")
 
-with open(file_path, "r") as file:
-    config_data = json.load(file)
-    scripts = config_data["scripts"]
+    return config_data
 
-root = ctk.CTk()
-# root.geometry("300x400")
-root.geometry("500x500")
-root.title("Script Runner by BartoszJakubowsky")
+def start_app():
 
-label = ctk.CTkLabel(root, text="Script Runner App", font=("Helvetica", 16))
-label.pack(pady=10)
+    def create_ui(root):
+        root.geometry("500x500")
+        root.title("Script Runner by BartoszJakubowsky")
 
-log_text = ctk.CTkTextbox(root, height=300, width=400)
-log_text.pack(pady=5)
+        label = ctk.CTkLabel(root, text="Script Runner App", font=("Helvetica", 16))
+        label.pack(pady=10)
 
-buttons = []
+        log_text = ctk.CTkTextbox(root, height=300, width=400)
+        log_text.pack(pady=5)
 
-for script in scripts:
-    title = script["title"]
-    script_url = script["script_url"]
-    requirements_url = script["requirements"]
+    def create_buttons(root):
+        def get_scripts():
+            config_data = load_config_from_github()
+            scripts = config_data.get("scripts", [])
+            return scripts
+            # with open(file_path, "r") as file:
+            #     config_data = json.load(file)
+            #     scripts = config_data["scripts"]
+        
+        buttons = []
+        scripts = get_scripts();
+        for script in scripts:
+            title = script["title"]
+            script_url = script["script_url"]
+            requirements_url = script["requirements"]
 
-    button = ctk.CTkButton(root, text=title)
-    button.pack(pady = 5)
-    buttons.append(button)
+            button = ctk.CTkButton(root, text=title)
+            button.pack(pady = 5)
+            buttons.append(button)
 
-    button.configure(command=lambda req_url=requirements_url, scr_url=script_url, btn=button: install_and_run(req_url, scr_url, btn))
+            button.configure(command=lambda req_url=requirements_url, scr_url=script_url, btn=button: install_and_run(req_url, scr_url, btn))
+    
+    root = ctk.CTk()
+    
+    create_ui(root)
+    create_buttons(root)
 
+    root.mainloop()
 
-root.mainloop()
+start_app();
