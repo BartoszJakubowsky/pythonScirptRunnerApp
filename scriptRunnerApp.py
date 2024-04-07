@@ -29,7 +29,15 @@ def install_and_run(requirements_url, script_url, button, title, log_text):
                 log_text.configure(state=ctk.DISABLED)
                 log_text.see(ctk.END)
 
-    def watch_process():
+
+    def watch_install_thread():
+        while True:
+            if install_thread.poll() is not None:
+                #start process
+                break
+            
+
+    def watch_process_thread():
         while True:
             if process.poll() is not None:
                 button.configure(text=title, state=ctk.NORMAL)
@@ -49,7 +57,7 @@ def install_and_run(requirements_url, script_url, button, title, log_text):
     log_text.delete("1.0", ctk.END) 
 
     threading.Thread(target=update_log).start()
-    threading.Thread(target=watch_process).start()
+    threading.Thread(target=watch_process_thread).start()
 def load_config_from_github():
     github_raw_url = 'https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/scripts_config.json'
     config_data = {}
