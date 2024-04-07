@@ -6,13 +6,14 @@ import threading
 import urllib.request
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
+buttons = []
 # file_path = os.path.join(current_directory, "scripts_config.json")
-
-def install_and_run(requirements_url, script_url, button):
+def install_and_run(requirements_url, script_url, button, title, log_text):
+    global running_script
     def install():
-        button.configure(state=ctk.DISABLED, text="Instalowanie...")
+        button.configure(state=ctk.DISABLED, text="Installing...")
         subprocess.run(["pip", "install", "-r", requirements_url])
-        button.configure(text="Uruchom skrypt", state=ctk.NORMAL)
+        # button.configure(text="Uruchom skrypt", state=ctk.NORMAL)
     def clear_log():
         log_text.configure(state=ctk.NORMAL)
         log_text.delete("1.0", ctk.END)
@@ -28,6 +29,17 @@ def install_and_run(requirements_url, script_url, button):
                 log_text.configure(state=ctk.DISABLED)
                 log_text.see(ctk.END)
 
+    def watch_process():
+        while True:
+            if process.poll() is not None:
+                button.configure(text=title, state=ctk.NORMAL)
+                break
+            if process.poll() is None:
+                button.configure(text="Running...", state=ctk.NORMAL)
+
+  
+    threading.Thread(target=clear_log).start()
+    
     install_thread = threading.Thread(target=install)
     install_thread.start()
 
@@ -36,9 +48,8 @@ def install_and_run(requirements_url, script_url, button):
     log_text.configure(state=ctk.DISABLED)
     log_text.delete("1.0", ctk.END) 
 
-    threading.Thread(target=clear_log).start()
     threading.Thread(target=update_log).start()
-
+    threading.Thread(target=watch_process).start()
 def load_config_from_github():
     github_raw_url = 'https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/scripts_config.json'
     config_data = {}
@@ -51,7 +62,17 @@ def load_config_from_github():
 
     return config_data
 
+# def change_button_state(state):
+#     global buttons
+#     for button in buttons:
+#         if state:
+#             button.configure(state=ctk.NORMAL, bg="")
+#         else:
+#             button.configure(state=ctk.DISABLED, bg="#888888")
+
 def start_app():
+    global running_script
+    global buttons
 
     def create_ui(root):
         root.geometry("500x500")
@@ -60,10 +81,12 @@ def start_app():
         label = ctk.CTkLabel(root, text="Script Runner App", font=("Helvetica", 16))
         label.pack(pady=10)
 
+    def create_log_text(root):
         log_text = ctk.CTkTextbox(root, height=300, width=400)
         log_text.pack(pady=5)
-
-    def create_buttons(root):
+        return log_text
+    
+    def create_buttons(root, log_text):
         def get_scripts():
             config_data = load_config_from_github()
             scripts = config_data.get("scripts", [])
@@ -72,7 +95,6 @@ def start_app():
             #     config_data = json.load(file)
             #     scripts = config_data["scripts"]
         
-        buttons = []
         scripts = get_scripts();
         for script in scripts:
             title = script["title"]
@@ -81,14 +103,14 @@ def start_app():
 
             button = ctk.CTkButton(root, text=title)
             button.pack(pady = 5)
+            button.configure(command=lambda req_url=requirements_url, scr_url=script_url, btn=button: install_and_run(req_url, scr_url, btn, title, log_text))
             buttons.append(button)
 
-            button.configure(command=lambda req_url=requirements_url, scr_url=script_url, btn=button: install_and_run(req_url, scr_url, btn))
-    
     root = ctk.CTk()
-    
+
     create_ui(root)
-    create_buttons(root)
+    log_text = create_log_text(root)
+    create_buttons(root, log_text)
 
     root.mainloop()
 
