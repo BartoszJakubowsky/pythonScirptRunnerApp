@@ -1,0 +1,16 @@
+{
+    "scripts": [
+        {
+            "title": "Calculator generator",
+            "description": "-",
+            "script_url": "https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/poleCalculatorGenerator.py",
+            "requirements" : "https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/requirements.txt"
+        },
+        {
+            "title": "Plot generator",
+            "description": "-",
+            "script_url": "https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/createPlotForm.py",
+            "requirements" : "https://raw.githubusercontent.com/BartoszJakubowsky/Python/master/requirements.txt"
+        }
+    ]
+}
